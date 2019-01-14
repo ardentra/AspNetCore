@@ -223,6 +223,10 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         {
             var newPathSegments = routePattern.PathSegments.ToList();
             var hasLinkGenerationEndpoint = false;
+
+            // This is required because we create modified copies of the route pattern using its segments
+            // A segment with a parameter will automatically include its policies
+            // Non-parameter policies need to be manually included
             var nonParameterPolicyValues = routePattern.ParameterPolicies
                 .Where(p => routePattern.GetParameter(p.Key ?? string.Empty) == null && p.Value.Count > 0 && p.Value.First().ParameterPolicy != null) // Only GetParameter is required. Extra is for safety
                 .Select(p => new KeyValuePair<string, object>(p.Key, p.Value.First().ParameterPolicy)) // Can only pass a single non-parameter to RouteParameter
