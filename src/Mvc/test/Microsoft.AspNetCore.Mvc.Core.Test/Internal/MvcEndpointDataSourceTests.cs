@@ -321,7 +321,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             var dataSource = CreateMvcEndpointDataSource(actionDescriptorCollection);
             dataSource.ConventionalEndpointInfos.Add(CreateEndpointInfo(
                 string.Empty,
-                "{controller}/{action}/{id}",
+                "{controller}/{action}/{id:range(0, 100)}",
                 new RouteValueDictionary(new { action = "TestAction" }),
                 new RouteValueDictionary(new { controller = "TestController", nonParameter = new CustomConstraint(), id = new IntRouteConstraint() })));
 
@@ -333,12 +333,14 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
             var routePattern = endpoint.RoutePattern;
 
-            Assert.Equal("TestController/TestAction/{id:}", routePattern.RawText);
+            Assert.Equal("TestController/TestAction/{id::range(0, 100)}", routePattern.RawText);
             Assert.Collection(routePattern.ParameterPolicies.OrderBy(p => p.Key),
                 p =>
                 {
                     Assert.Equal("id", p.Key);
-                    Assert.IsType<IntRouteConstraint>(p.Value.Single().ParameterPolicy);
+                    Assert.Collection(p.Value,
+                        c => Assert.IsType<IntRouteConstraint>(c.ParameterPolicy),
+                        c => Assert.Equal("range(0, 100)", c.Content));
                 },
                 p =>
                 {
